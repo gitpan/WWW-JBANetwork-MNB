@@ -6,7 +6,7 @@
 # WWW::JBANetwork::MNB is an interface to the mynewsletterbuilder.com
 # XML-RPC API.
 #
-# $Id: MyNewsletterBuilder.pm 59133 2010-04-20 04:11:37Z bo $
+# $Id: MNB.pm 59141 2010-04-20 13:51:32Z bo $
 #
 
 package WWW::JBANetwork::MNB;
@@ -19,7 +19,7 @@ require Exporter;
 
 our @ISA = qw(Exporter);
 
-our $VERSION = '0.01b01';
+our $VERSION = '0.01b02';
 
 sub new {
 	my $class = shift;
@@ -42,7 +42,7 @@ sub new {
 	};
 
 	bless($self, $class);
-
+	# we have to bless before setting up the url and client
 	my $url = $self->buildUrl();
 	if ($self->{debug}){
 		print "url: $url\n";
@@ -52,6 +52,7 @@ sub new {
 	return $self;
 }
 
+# the only config var that might need to be changed between calls is timeout
 sub Timeout{
 	my $self = shift;
 	$self->{timeout} = shift;
@@ -64,9 +65,7 @@ sub Campaigns{
 	my $filters = ($#_ == 0) ? { %{ (shift) } } : { @_ };
 	# make sure that if filters is populated
 	# it is a hashref
-	if (	$filters && 
-	     	ref($filters) ne 'HASH'
-	){
+	if ($filters && ref($filters) ne 'HASH'){
 		$self->error('filter passed to WWW::JBANetwork::MNB->Campaings() does not appear to be valid', 1);
 	}
 	
@@ -235,9 +234,9 @@ sub CampaignClicks{
 	my $page   = shift || 0;
 	my $limit  = shift || 1000;
 
-	$self->error('invalid id passed to WWW::JBANetwork::MNB->CampaignClicks()')     unless ($id     =~ /^\d+$/);
-	$self->error('invalid page passed to WWW::JBANetwork::MNB->CampaignClicks()')   unless ($page   =~ /^\d+$/);
-	$self->error('invalid limit passed to WWW::JBANetwork::MNB->CampaignClicks()')  unless ($limit  =~ /^\d+$/);
+	$self->error('invalid id passed to WWW::JBANetwork::MNB->CampaignClicks()')    unless ($id    =~ /^\d+$/);
+	$self->error('invalid page passed to WWW::JBANetwork::MNB->CampaignClicks()')  unless ($page  =~ /^\d+$/);
+	$self->error('invalid limit passed to WWW::JBANetwork::MNB->CampaignClicks()') unless ($limit =~ /^\d+$/);
 
 	return $self->Execute(
 		'CampaignClicks',
@@ -323,7 +322,7 @@ sub ListDetails{
 	my $self = shift;
 	my $id   = shift;
 	
-	$self->error('invalid id passed to WWW::JBANetwork::MNB->ListDetails()') unless ($id  =~ /^\d+$/);
+	$self->error('invalid id passed to WWW::JBANetwork::MNB->ListDetails()') unless ($id =~ /^\d+$/);
 	
 	return $self->Execute('ListDetails', $id);
 }
@@ -335,10 +334,9 @@ sub ListCreate{
 	my $visible     = shift || 0;
 	my $default     = shift || 0;
 
-	$self->error('invalid name passed to WWW::JBANetwork::MNB->ListCreate()')         unless ($name        =~ /^.+$/);
-	$self->error('invalid description passed to WWW::JBANetwork::MNB->ListCreate()')  unless ($description =~ /^.+$/);
-	$self->error('invalid visible flag passed to WWW::JBANetwork::MNB->ListCreate()') unless ($visible     =~ /^(0|1)$/);
-	$self->error('invalid default flag passed to WWW::JBANetwork::MNB->ListCreate()') unless ($default     =~ /^(0|1)$/);
+	$self->error('invalid name passed to WWW::JBANetwork::MNB->ListCreate()')         unless ($name    =~ /^.+$/);
+	$self->error('invalid visible flag passed to WWW::JBANetwork::MNB->ListCreate()') unless ($visible =~ /^(0|1)$/);
+	$self->error('invalid default flag passed to WWW::JBANetwork::MNB->ListCreate()') unless ($default =~ /^(0|1)$/);
 
 	return $self->Execute(
 		'ListCreate',
@@ -354,7 +352,7 @@ sub ListUpdate{
 	my $id          = shift;
 	my $details     = shift;
 
-	$self->error('invalid id passed to WWW::JBANetwork::MNB->ListUpdate()')           unless ($id      =~ /^\d+$/);
+	$self->error('invalid id passed to WWW::JBANetwork::MNB->ListUpdate()') unless ($id =~ /^\d+$/);
 	#TODO: details hashref validation
 
 	return $self->Execute(
@@ -485,7 +483,7 @@ sub AccountKeys{
 
 	$self->error('invalid username passed to WWW::JBANetwork::MNB->AccountKeys()')      unless ($username =~ /^.+$/);
 	$self->error('invalid password passed to WWW::JBANetwork::MNB->AccountKeys()')      unless ($password =~ /^.+$/);
-	$self->error('invalid disabled flag passed to WWW::JBANetwork::MNB->AccountKeys()') unless ($disabled     =~ /^(0|1)$/);
+	$self->error('invalid disabled flag passed to WWW::JBANetwork::MNB->AccountKeys()') unless ($disabled =~ /^(0|1)$/);
 
 	return $self->Execute(
 		'AccountKeys',
@@ -517,11 +515,6 @@ sub AccountKeyRemove{
 	return $self->Execute('AccounKeyRemove', $username, $password);
 }
 
- ##
- # Test server response
- # @param string String to echo
- # @return string
- ##
 sub HelloWorld{
 	my $self = shift;
 	my $val  = shift;
@@ -529,12 +522,6 @@ sub HelloWorld{
 	return $self->Execute('HelloWorld', $val);
 }
 
- ##
- # Connect to remote server and handle response.
- # @param string $method Action to invoke
- # @param mixed $params Parameters required for $method
- # @return mixed Server response, FALSE on error.
- ##
 sub Execute{
 	my $self   = shift;
 	my $method = shift;
@@ -557,7 +544,7 @@ sub Execute{
 	}
 
 	if (ref($data) eq 'HASH' && $data->{'errno'}){
-		$self->{errno} = $data->{'errno'};
+		$self->{errno}  = $data->{'errno'};
 		$self->{errstr} = $data->{'errstr'};
 		return 0;
 	}
@@ -588,7 +575,7 @@ sub getClient{
 	);
 
 	# we have to modify Frontier's LWP instance a little bit.
-	$client->{ua}->agent('MNB_API Perl ' . $self->{api_version} . '/' . $VERSION . '-' . '$Rev: 59133 $');
+	$client->{ua}->agent('MNB_API Perl ' . $self->{api_version} . '/' . $VERSION . '-' . '$Rev: 59141 $');
 	$client->{ua}->requests_redirectable(['GET', 'HEAD', 'POST' ]);
 	$client->{ua}->timeout($self->{timeout});
 

@@ -5,7 +5,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile(
     NAME              => 'WWW::JBANetwork::MNB',
     VERSION_FROM      => 'lib/WWW/JBANetwork/MNB.pm', # finds $VERSION
-    PREREQ_PM         => {Frontier::Client => 0.06, Data::Dumper => 5.004}, # e.g., Module::Name => 1.1
+    PREREQ_PM         => {Frontier::Client => 0.07, Data::Dumper => 2.101}, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/WWW/JBANetwork/MNB.pm', # retrieve abstract from module
        AUTHOR         => 'Robert Davis <robert@jbanetwork.com>') : ()),
