@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/MNB/!svn/ver/59122/api/trunk/wrappers/Perl/WWW-JBANetwork-MNB
+END
+MANIFEST
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/MNB/!svn/ver/59118/api/trunk/wrappers/Perl/WWW-JBANetwork-MNB/MANIFEST
+END
+Makefile.PL
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/MNB/!svn/ver/59121/api/trunk/wrappers/Perl/WWW-JBANetwork-MNB/Makefile.PL
+END
+Changes
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/MNB/!svn/ver/59122/api/trunk/wrappers/Perl/WWW-JBANetwork-MNB/Changes
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/MNB/!svn/ver/59119/api/trunk/wrappers/Perl/WWW-JBANetwork-MNB/README
+END
