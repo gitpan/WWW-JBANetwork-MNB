@@ -1,8 +1,8 @@
-WWW-JBANetwork-MNB version 0.01
+WWW-JBANetwork-MNB version 0.01b01
 ===============================
 
-This is the first version of the Perl interface for the mynewsletterbuilder.com
-XML-RPC API.
+This is the first version of the Perl interface for the api.mynewsletterbuilder.com
+XML-RPC API.  Contact support@mynewsletterbuilder.com for an API key. 
 
 INSTALLATION
 

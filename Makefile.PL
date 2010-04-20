@@ -8,5 +8,5 @@ WriteMakefile(
     PREREQ_PM         => {Frontier::Client => 0.06, Data::Dumper => 5.004}, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?     ## Add these new keywords supported since 5.005
       (ABSTRACT_FROM  => 'lib/WWW/JBANetwork/MNB.pm', # retrieve abstract from module
-       AUTHOR         => 'Robert Davis <robert@@jbanetwork.com>') : ()),
+       AUTHOR         => 'Robert Davis <robert@jbanetwork.com>') : ()),
 );

@@ -1,12 +1,12 @@
 #
-# Copyright (C) 2010 JBA Network
+# Copyright (C) 2010 JBA Network (http://www.jbanetwork.com)
 # WWW::JBANetwork::MNB is free software; you can redistribute it
 # and/or modify it under the same terms as Perl itself.
 #
 # WWW::JBANetwork::MNB is an interface to the mynewsletterbuilder.com
 # XML-RPC API.
 #
-# $Id$
+# $Id: MyNewsletterBuilder.pm 59133 2010-04-20 04:11:37Z bo $
 #
 
 package WWW::JBANetwork::MNB;
@@ -19,7 +19,7 @@ require Exporter;
 
 our @ISA = qw(Exporter);
 
-our $VERSION = '0.01';
+our $VERSION = '0.01b01';
 
 sub new {
 	my $class = shift;
@@ -63,7 +63,7 @@ sub Campaigns{
 	my $self    = shift;
 	my $filters = ($#_ == 0) ? { %{ (shift) } } : { @_ };
 	# make sure that if filters is populated
-	# it is a hash ref
+	# it is a hashref
 	if (	$filters && 
 	     	ref($filters) ne 'HASH'
 	){
@@ -116,32 +116,17 @@ sub CampaignCreate{
 
 sub CampaignUpdate{
 	my $self          = shift;
-	my $name          = shift;
-	my $subject       = shift;
-	my $from          = shift;
-	my $reply         = shift;
-	my $html          = shift;
-	my $text          = shift || '';
-	my $link_tracking = shift || 1;
-	my $gat           = shift || 0;
+	my $id            = shift;
+	my $details       = shift;
 	
-	$self->error('invalid name passed to WWW::JBANetwork::MNB->CampaignCreate()')               unless ($name          =~ /^.+$/);
-	$self->error('invalid subject passed to WWW::JBANetwork::MNB->CampaignCreate()')            unless ($subject       =~ /^.+$/);
-	$self->error('invalid html passed to WWW::JBANetwork::MNB->CampaignCreate()')               unless ($html          =~ /^.+$/);
-	$self->error('invalid link_tracking flag passed to WWW::JBANetwork::MNB->CampaignCreate()') unless ($link_tracking =~ /^(0|1)$/);
-	$self->error('invalid gat flag passed to WWW::JBANetwork::MNB->CampaignCreate()')           unless ($gat           =~ /^(0|1)$/);
-	#TODO: should probably add some from/reply validation here
+	
+	$self->error('invalid id passed to WWW::JBANetwork::MNB->CampaignCreate()') unless ($id =~ /^\d+$/);
+	#TODO: should probably add some detail validation here
 	
 	return $self->Execute(
 		'CampaignUpdate',
-		$name,
-		$subject,
-		$from,
-		$reply,
-		$html,
-		$text,
-		$link_tracking,
-		$gat,
+		$id,
+		$details,
 	);
 }
 
@@ -367,22 +352,15 @@ sub ListCreate{
 sub ListUpdate{
 	my $self        = shift;
 	my $id          = shift;
-	my $name        = shift || '';
-	my $description = shift || '';
-	my $visible     = shift || 0;
-	my $default     = shift || 0;
+	my $details     = shift;
 
 	$self->error('invalid id passed to WWW::JBANetwork::MNB->ListUpdate()')           unless ($id      =~ /^\d+$/);
-	$self->error('invalid visible flag passed to WWW::JBANetwork::MNB->ListUpdate()') unless ($visible =~ /^(0|1)$/);
-	$self->error('invalid default flag passed to WWW::JBANetwork::MNB->ListUpdate()') unless ($default =~ /^(0|1)$/);
+	#TODO: details hashref validation
 
 	return $self->Execute(
 		'ListUpdate',
 		$id,
-		$name,
-		$description,
-		$visible,
-		$default
+		$details,
 	);
 }
 
@@ -610,7 +588,7 @@ sub getClient{
 	);
 
 	# we have to modify Frontier's LWP instance a little bit.
-	$client->{ua}->agent('MNB_API Perl ' . $self->{api_version} . '/00000');
+	$client->{ua}->agent('MNB_API Perl ' . $self->{api_version} . '/' . $VERSION . '-' . '$Rev: 59133 $');
 	$client->{ua}->requests_redirectable(['GET', 'HEAD', 'POST' ]);
 	$client->{ua}->timeout($self->{timeout});
 
@@ -645,41 +623,33 @@ WWW::JBANetwork::MNB - Perl implementation of the mynewsletterbuilder.com API
 	use WWW::JBANetwork::MNB;
 	
 	my $mnb = WWW::JBANetwork::MNB->new(
-			  		debug       => 1,
-			  		api_key     => , # your key here
-			  );
+		api_key     => , # your key here
+	);
 	
-	my $data;
+	print $mnb->HelloWorld('Perl Test');
 	
-	print "running HelloWorld():\n";		  
-	$mnb->HelloWorld('Perl Test');
-	
-	print "running Campaigns():\n";
 	my $campaigns = $mnb->Campaigns( status => 'all' );
 	
-	print "running CampaignCreate:\n";
 	my $cam_id = $mnb->CampaignCreate(
 		'perl test',
 		'perl test subject',
 		{
 			name  => 'perl test from name',
-			email => 'robert@jbanetork.com'
+			email => 'robert@jbanetwork.com'
 		},
 		{
 			name  => 'perl test reply name',
-			email => 'robert@jbanetork.com'
+			email => 'robert@jbanetwork.com'
 		},
 		'<a href="mynewsletterbuilder.com">html content</a>',
 		'text content',
 	);
-	
-	print "running ListCreate:\n";
+
 	my $list_id = $mnb->ListCreate(
 		'perl test',
 		'perl test list',
 	);
-	
-	print "running Subscribe:\n";
+
 	my $sub_id = $mnb->Subscribe(
 		{
 			email            => 'robert@jbanetwork.com',
@@ -696,34 +666,18 @@ WWW::JBANetwork::MNB - Perl implementation of the mynewsletterbuilder.com API
 		},
 		[ $list_id ]
 	);
-	
-	print "running SubscriberInfo:\n";
-	$mnb->SubscriberInfo("$sub_id");
-	
-	print "running Schedule on new list/campaign:\n";
+
 	$mnb->CampaignSchedule(
 		$cam_id,
 		time(),
 		[ $list_id ],
 	);
-	
-	print "running CampaignDetails on new id $cam_id:\n";
-	$data = $mnb->CampaignDetails($cam_id);
-	$data = $mnb->CampaignStats($cam_id);
-	$data = $mnb->CampaignRecipients($cam_id);
-	$data = $mnb->CampaignOpens($cam_id);
-	$data = $mnb->CampaignBounces($cam_id);
-	$data = $mnb->CampaignUrls($cam_id);
-	$data = $mnb->CampaignClicks($cam_id);
-	
-	print "running SubscriberDelete:\n";
+
 	$mnb->SubscriberDelete("$sub_id");
 	
 	$mnb->ListDelete($list_id);
-	$data = $mnb->Lists();
 	
 	$mnb->CampaignDelete($cam_id);
-	$mnb->Campaigns();
 
 =head1 DESCRIPTION
 
@@ -758,7 +712,7 @@ sets timeout for results
 
 =item $mnb->Campaigns( %filters )
 
-returns an array of hash refs listing campaigns.  Optional key/value pair argument allows you to filter results:
+returns an array of hashrefs listing campaigns.  Optional key/value pair argument allows you to filter results:
 
    KEY                     OPTIONS
    ___________             ____________________
@@ -804,19 +758,20 @@ requires a whole bunch of stuff and returns an id. arguments:
     bool $link_tracking -- 0 turn off link tracking 1(default) turns it on
     bool $gat -- 0(default) turns off Google Analytics Tracking 1 turns it on
 
-=item $mnb->CampaignUpdate( int $id, string $name, string $subject, \%from, \%reply, string $html, string $text, bool $link_tracking, bool $gat )
+=item $mnb->CampaignUpdate( int $id, \%details )
 
-requires a whole bunch of stuff and returns 1 if successful and 0 on failure. arguments:
+requires an int id and hashref details returns 1 if successful and 0 on failure. hashref format:
 
-    int $id -- campaign id to be upated
-    string $name -- Internal campaign name
-    string $subject -- Campaign subject line
-    hashref $from -- keys are 'name' and 'email'
-    hashref $reply -- keys are 'name' and 'email' (if empty $from is used)
-    string $html -- HTML content for the campaign.
-    string $text -- the text content for the campaign.
-    bool $link_tracking -- 0 turn off link tracking 1(default) turns it on
-    bool $gat -- 0(default) turns off Google Analytics Tracking 1 turns it on
+   KEY                     DESCRIPTION
+   ___________             ____________________
+   name                    Internal campaign name
+   subject                 Campaign subject line
+   from                    hashref with keys 'name' and 'email'
+   reply                   hashref with keys are 'name' and 'email' (if empty $from is used)
+   html                    HTML content for the campaign.
+   text                    the text content for the campaign.
+   link_tracking           0 turn off link tracking 1(default) turns it on
+   gat                     0(default) turns off Google Analytics Tracking 1 turns it on
 
 =item $mnb->CampaignCopy( int $id, string $name )
 
@@ -847,7 +802,7 @@ takes a campaign id and returns stats for that campaign. returned hahsref has th
    id                      numeric id for campaign
    clicks                  number of clicks
    clicks_unique           number of unique clicks
-   forwards				   number of forwards
+   forwards                number of forwards
    forwards_unique         number of unique forwards
    opens                   number of opens
    opens_unique            number of unique opens
@@ -864,74 +819,74 @@ takes a campaign id and returns stats for that campaign. returned hahsref has th
 
 =item $mnb->CampaignRecipients( int $id, int $page, int $limit)
 
-takes a campaign id, a page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers in the format:
+takes a campaign id, an optional page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers in the format:
 
    KEY                     DESCRIPTION
    ___________             ____________________
    id                      numeric id of subscriber
-   email                   email addres of subscriber
+   email                   email address of subscriber
    processed               when campaign was sent to subscriber ('2010-03-04 01:30:47' EST)
 
 =item $mnb->CampaignOpens( int $id, int $page, int $limit)
 
-takes a campaign id, a page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who have opened the campaign in the format:
+takes a campaign id, an optional page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who have opened the campaign in the format:
 
    KEY                     DESCRIPTION
    ___________             ____________________
    id                      numeric id of subscriber
-   email                   email addres of subscriber
+   email                   email address of subscriber
    count                   number of opens
    first_open              date and time subscriber first opened campaign ('2010-03-04 01:30:47' EST)
    last_open               date and time subscriber last opened campaign ('2010-03-04 01:30:47' EST)
 
 =item $mnb->CampaignBounces( int $id, int $page, int $limit)
 
-takes a campaign id, a page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who bounced in the format:
+takes a campaign id, an optional page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who bounced in the format:
 
    KEY                     DESCRIPTION
    ___________             ____________________
    id                      numeric id of subscriber
-   email                   email addres of subscriber
+   email                   email address of subscriber
    processed               when mnb processed bounce from subscriber ('2010-03-04 01:30:47' EST)
 
 =item $mnb->CampaignClicks( int $id, int $page, int $limit)
 
-takes a campaign id, a page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who clicked links in the format:
+takes a campaign id, an optional page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who clicked links in the format:
 
    KEY                     DESCRIPTION
    ___________             ____________________
    id                      numeric id of subscriber
-   email                   email addres of subscriber
+   email                   email address of subscriber
 
 =item $mnb->CampaignClickDetails( int $id, int $url_id, int $page, int $limit)
 
-takes a campaign id, an optional url id and a page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who clicked links in the format:
+takes a campaign id, url id and optional page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who clicked links in the format:
 
    KEY                     DESCRIPTION
    ___________             ____________________
    id                      numeric id of subscriber
-   email                   email addres of subscriber
+   email                   email address of subscriber
    count                   number of times subscriber clicked link
    url_id                  url id of link clicked
 
 =item $mnb->CampaignSubscribes( int $id, int $page, int $limit)
 
-takes a campaign id, a page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who subscribed based on this campaign in the format:
+takes a campaign id, an optional page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who subscribed based on this campaign in the format:
 
    KEY                     DESCRIPTION
    ___________             ____________________
    id                      numeric id of subscriber
-   email                   email addres of subscriber
+   email                   email address of subscriber
    processed               when subscriber was processed
 
 =item $mnb->CampaignUnsubscribes( int $id, int $page, int $limit)
 
-takes a campaign id, a page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who unsubscribed in the format:
+takes a campaign id, an optional page number and limit (for paging systems on large data sets) and returns an array of hashrefs containing data about subscribers who unsubscribed in the format:
 
    KEY                     DESCRIPTION
    ___________             ____________________
    id                      numeric id of subscriber
-   email                   email addres of subscriber
+   email                   email address of subscriber
    processed               when subscriber was processed
 
 =item $mnb->CampaignUrls( int $id )
@@ -958,7 +913,7 @@ returns an array hasrefs of subscriber lists with the following keys:
    hidden                  1 if hidden 0 if not
    default                 1 if default 0 if not
    subscribers             number of subscribers in list
-   
+
 =item $mnb->ListCreate( string $name, string $description, bool $visible, bool $default )
 
 takes several arguments, creates a new subscriber list and returns it's unique id. arguments:
@@ -968,15 +923,18 @@ takes several arguments, creates a new subscriber list and returns it's unique i
     bool $visible -- 1 if list is visible 0(default) if not
     bool $default -- 1 if list is default 0(default) if not
 
-=item $mnb->ListUpdate( int $id, string $name, string $description, bool $visible, bool $default )
+=item $mnb->ListUpdate( int $id, \%details )
 
-takes several arguments (only id is required though we won't actually do anything withouat at least one more), creates a new subscriber list and returns it's unique id. arguments:
+takes an id and a hashref of details (only id is required though we won't actually do anything without something in the details hashref), updates the subscriber list identified by id and returns 1 on success and 0 on failure.
 
-	int $id -- list id
-    string $name -- new name for list
-    string $description -- new description for list
-    bool $visible -- 1 if list is visible 0(default) if not
-    bool $default -- 1 if list is default 0(default) if not
+details hashref format:
+
+   KEY                     DESCRIPTION
+   ___________             ____________________
+   name                    new name for list
+   description             new description for list
+   visible                 1 if list is visible 0(default) if not
+   default                 1 if list is default 0(default) if not
 
 =item $mnb->ListDelete( int $id, bool $delete_subs )
 
@@ -1016,7 +974,7 @@ Subscribe() returns a hashref with the following keys:
    ___________                     ____________________
    id                              subscriber's unique id
    email                           subscriber's uniqe email
-   status                          status of subscription.  possible values are new, updated, error
+   status                          status of subscription.  possible values are new, updated, error, ignored
    status_msg                      contains text message about update... usually only used for errors
 
 =item $mnb->SubscribeBatch( \@subscribers, \@lists, bool $skip_opt_in, bool $update_existing )
@@ -1068,7 +1026,7 @@ the subscribers key of the return from SubscribeBatch() contains an array of has
    ___________                     ____________________
    id                              subscriber's unique id
    email                           subscriber's uniqe email
-   status                          status of subscription.  possible values are new, updated, error
+   status                          status of subscription.  possible values are new, updated, error, ignored
    status_msg                      contains text message about update... usually only used for errors
 
 
@@ -1095,7 +1053,7 @@ takes an argument that can be either the unique id for the subscriber or an emai
    state                           state of address
    zip                             postal code
    country                         country part of address (may be improperly formatted)
-   newsletter_id_subscribed_from   key is long enough that you shouldn't have to guess
+   campaign_id                     if subscriber subscribed from a campaign it's id is here
    lists                           contains a flat array containing the lists the user is in
    last_confirmation_request       last time we sent a confirmation to the user
    confirmed_date                  date subscriber confirmed
@@ -1148,7 +1106,7 @@ returns 1 on success and 0 on failure.
 
 =item $mnb->SubscriberUnsubscribeBatch( \@ids_or_emails )
 
-takes an argument that is an array containing either the unique id for the subscriber or an email address and permanantly removes those subscribesr for the user identified by your api_key.  this subscribers will NOT be able to be readded by SubscribeBatch().
+takes an argument that is an array containing either the unique ids for the subscriber or an email address and permanantly removes those subscribesr for the user identified by your api_key.  these subscribers will NOT be able to be readded by SubscribeBatch().
 
 returns 1 on success and 0 on failure.
 
@@ -1160,7 +1118,7 @@ returns 1 on success and 0 on failure.
 
 =item $mnb->SubscriberDeleteBatch( \@ids_or_emails )
 
-takes an argument that is an array containing either the unique id for the subscriber or an email address and removes the subscribers for the user identified by your api_key. subscribers WILL be readded if their email addresses are re-submitted to Subscribe() or SubscribeBatch().
+takes an argument that is an array containing either the unique id for subscribers or an email addresss and removes the subscribers for the user identified by your api_key. these subscribers WILL be readded if their email addresses are re-submitted to Subscribe() or SubscribeBatch().
 
 returns 1 on success and 0 on failure.
 
@@ -1174,7 +1132,7 @@ return is an array of hashrefs with the following keys:
    ___________                     ____________________
    id                              unique numeric id of key
    key                             unique key string
-   create                          date key created
+   created                         date key created
    expired                         date key expired or was disabled (null for valid key)
 
 =item $mnb->AccountKeyCreate( string $username, string $password )
@@ -1216,7 +1174,7 @@ http://api.mynewsletterbuilder.com
 
 =head1 AUTHOR
 
-Robert Davis, <lt>robert@jbanetwork.com<gt>
+Robert Davis, robert@jbanetwork.com
 
 =head1 COPYRIGHT AND LICENSE
 
