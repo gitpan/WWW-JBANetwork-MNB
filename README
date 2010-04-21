@@ -1,5 +1,5 @@
-WWW-JBANetwork-MNB version 0.01b02
-===============================
+WWW-JBANetwork-MNB version 0.01b03
+==================================
 
 This is the first version of the Perl interface for the api.mynewsletterbuilder.com
 XML-RPC API.  Contact support@mynewsletterbuilder.com for an API key. 
@@ -28,3 +28,25 @@ it under the same terms as Perl itself, either Perl version 5.8.8 or,
 at your option, any later version of Perl 5 you may have available.
 
 Author: Robert Davis <robert@jbanetwork.com>
+
+
+REVISION HISTORY
+
+0.01  Mon Apr 19 20:19:45 2010
+	- original version; created by h2xs 1.23 with options
+		-AXc -n WWW::JBANetwork::MNB
+		
+0.01b01 Mon Apr 19 23:38:50 2010
+	- FIXED documentation
+	- UPDATED argument list for UPDATE methods
+	
+0.01b02 Mon Apr 20 09:49:32 2010
+	- general Cleanup.
+	- fix makefile requirements
+
+0.01b03 
+	- !!strict type casting and validation on all flat arguments
+	- fix AccountKeyDisable() and AccountKeyEnable()
+	- fix SubscriberUnsubscribeBatch()
+	- better error handling
+	- more cleanup and documentation updates
