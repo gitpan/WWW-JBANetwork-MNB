@@ -6,7 +6,7 @@
 # WWW::JBANetwork::MNB is an interface to the mynewsletterbuilder.com
 # XML-RPC API.
 #
-# $Id: MNB.pm 59242 2010-04-21 05:06:19Z bo $
+# $Id: MNB.pm 59253 2010-04-21 06:11:52Z bo $
 #
 
 package WWW::JBANetwork::MNB;
@@ -19,7 +19,7 @@ require Exporter;
 
 our @ISA = qw(Exporter);
 
-our $VERSION = '0.01b02';
+our $VERSION = '0.02';
 
 sub new {
 	my $class = shift;
@@ -542,7 +542,7 @@ sub _getClient{
 	);
 
 	# we have to modify Frontier's LWP instance a little bit.
-	$client->{ua}->agent('MNB_API Perl ' . $self->{_api_version} . '/' . $VERSION . '-' . '$Rev: 59242 $');
+	$client->{ua}->agent('MNB_API Perl ' . $self->{_api_version} . '/' . $VERSION . '-' . '$Rev: 59253 $');
 	$client->{ua}->requests_redirectable(['GET', 'HEAD', 'POST' ]);
 	$client->{ua}->timeout($self->{timeout});
 
